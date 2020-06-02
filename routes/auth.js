@@ -1,8 +1,20 @@
+//Package Imports
 const express = require('express');
-const router = express.Router();
-const mongoose = require('mongoose');
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+//File Imports
+const User = require('../models/user');
+const { JWT_SECRET_KEY } = require('../keys');
+const requireLogin = require('../middleware/requireLogin');
+
+const router = express.Router();
+
+// router.get('/p', requireLogin, (req, res) => {
+// 	res.send('hello');
+// 	console.log(req.user);
+// 	res.json(req.user);
+// });
 
 router.post('/signup', (req, res) => {
 	const { name, email, password } = req.body;
@@ -15,7 +27,7 @@ router.post('/signup', (req, res) => {
 	User.findOne({ email: email })
 		.then((savedUser) => {
 			if (savedUser) {
-				res.status(422).json({ message: 'Email already exists' });
+				return res.status(422).json({ message: 'Email already exists' });
 			}
 
 			bcrypt
@@ -60,7 +72,11 @@ router.post('/signin', (req, res) => {
 				.compare(password, savedUser.password)
 				.then((doMatch) => {
 					if (doMatch) {
-						return res.json({ message: 'signed in success' });
+						//return res.json({ message: 'signed in success' });
+
+						//generating token on basis of userId (_id)
+						const token = jwt.sign({ _id: savedUser._id }, JWT_SECRET_KEY);
+						res.json({ token });
 					} else {
 						return res
 							.status(422)

@@ -3,15 +3,16 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const { MONGO_URI } = require('./keys');
 
-require('./models/user');
 const app = express();
 
 //Routes
 const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/post');
 
 //Middlewares
 app.use(express.json());
 app.use(authRoutes);
+app.use(postRoutes);
 
 //Db
 mongoose
