@@ -16,25 +16,36 @@ const router = express.Router();
 // 	res.json(req.user);
 // });
 
-router.post('/signup', (req, res) => {
-	const { name, email, password } = req.body;
+router.get('/allcontacts', requireLogin, (req, res) => {
+	User.find()
+		.then((allcontacts) => {
+			res.json({ allcontacts });
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(500).json({ message: 'server is down' });
+		});
+});
 
-	if (!email || !password || !name) {
+router.post('/signup', (req, res) => {
+	const { name, phone, password } = req.body;
+
+	if (!phone || !password || !name) {
 		return res.status(422).json({ message: 'Please enter all fields' });
 	}
 	//res.json({ message: 'signedup successfully' });
 
-	User.findOne({ email: email })
+	User.findOne({ phone: phone })
 		.then((savedUser) => {
 			if (savedUser) {
-				return res.status(422).json({ message: 'Email already exists' });
+				return res.status(422).json({ message: 'Phone no. already exists' });
 			}
 
 			bcrypt
 				.hash(password, 12)
 				.then((hashedPassword) => {
 					const newUser = new User({
-						email,
+						phone,
 						password: hashedPassword,
 						name,
 					});
@@ -58,15 +69,15 @@ router.post('/signup', (req, res) => {
 });
 
 router.post('/signin', (req, res) => {
-	const { email, password } = req.body;
+	const { phone, password } = req.body;
 
-	if (!email || !password) {
+	if (!phone || !password) {
 		return res.status(422).json({ message: 'enter all details' });
 	}
-	User.findOne({ email: email })
+	User.findOne({ phone: phone })
 		.then((savedUser) => {
 			if (!savedUser) {
-				return res.status(422).json({ message: 'invalid email or password!' });
+				return res.status(422).json({ message: 'invalid phone or password!' });
 			}
 			bcrypt
 				.compare(password, savedUser.password)
@@ -80,7 +91,7 @@ router.post('/signin', (req, res) => {
 					} else {
 						return res
 							.status(422)
-							.json({ message: 'invalid email or password!' });
+							.json({ message: 'invalid phone or password!' });
 					}
 				})
 				.catch((error) => {
